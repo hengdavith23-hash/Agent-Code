@@ -2,7 +2,6 @@
 """
 DQN-Based Resource Allocations for eMBB in 5G NR - Agent
 ================================================
-State  : [SINR_UE1..6, Queue_UE1..6] 
 """
 
 import os
@@ -25,7 +24,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 PORT          = 5555
 SEED          = 42
-STATE_DIM     = 12       # [SINR×6, Queue×6]
+STATE_DIM     = 12      
 ACTION_DIM    = 3        
 
 LEARNING_RATE = 1e-3     # α = 0.001
