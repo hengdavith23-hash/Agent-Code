@@ -1,7 +1,7 @@
+
 #!/usr/bin/env python3
 """
 DQN-Based Resource Allocations for eMBB in 5G NR - Agent
-================================================
 """
 
 import os
@@ -20,11 +20,11 @@ except ImportError:
     raise ImportError("ns3gym not found. Install: pip install ns3gym")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Hyperparameters  (Paper 1 Table 5)
+# Hyperparameters
 # ─────────────────────────────────────────────────────────────────────────────
 PORT          = 5555
 SEED          = 42
-STATE_DIM     = 12      
+STATE_DIM     = 12     
 ACTION_DIM    = 3        
 
 LEARNING_RATE = 1e-3     # α = 0.001
@@ -32,7 +32,7 @@ GAMMA         = 0.998    # discount factor
 BATCH_SIZE    = 32
 BUFFER_SIZE   = 100000
 MIN_BUFFER    = 200
-TARGET_UPDATE = 10       # hard update every K steps
+TARGET_UPDATE = 10      
 
 EPS_START     = 1.0
 EPS_END       = 0.10
@@ -46,7 +46,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Q-Network  (2 hidden layers, ReLU)
+# Q-Network
 # ─────────────────────────────────────────────────────────────────────────────
 class QNetwork(nn.Module):
     def __init__(self):
@@ -173,7 +173,7 @@ def init_csvs():
     with open(STEP_CSV_PATH, 'w', newline='') as f:
         header = ["Episode", "Step", "Global_Step"]
         for i in range(1, STATE_DIM//2 + 1): header.append(f"SINR_UE{i}")
-        for i in range(1, STATE_DIM//2 + 1): header.append(f"Queue_UE{i}")
+        for i in range(1, STATE_DIM//2 + 1): header.append(f"Delay_UE{i}")
         header += ["Action", "Reward", "Cumulative_Reward", "Loss"]
         csv.writer(f).writerow(header)
 
@@ -181,8 +181,8 @@ def write_step_csv(ep, step, gstep, obs, action, reward, cum_r, loss):
     with open(STEP_CSV_PATH, 'a', newline='') as f:
         csv.writer(f).writerow([
             ep, step, gstep,
-            *[round(float(v), 6) for v in obs[:STATE_DIM//2]],  
-            *[round(float(v), 6) for v in obs[STATE_DIM//2:]],   
+            *[round(float(v), 6) for v in obs[:STATE_DIM//2]],   # SINR×6
+            *[round(float(v), 6) for v in obs[STATE_DIM//2:]],    # Delay×6
             action,
             round(reward, 6), round(cum_r, 6),
             round(loss, 6) if loss is not None else ""
@@ -227,8 +227,6 @@ def train():
     ep_rewards = []
     ep_losses  = []
 
-    # FIX: get first real observation via reset() so action selection is
-    # always based on actual env state, never on a zeros placeholder.
     try:
         raw = env.reset()
         obs = np.array(raw, dtype=np.float32).flatten() if raw is not None \
